@@ -17,6 +17,7 @@ class User(AbstractUser):
     displayname: str = models.CharField(max_length=30)
     username: str = models.CharField(max_length=30, unique=True)
     # email: str = models.EmailField(unique=True)
+    bio: str = models.CharField(max_length=500)
     image: str | None = models.UrlField(null=True, blank=True)
     password: str = models.CharField(max_length=100)
 
