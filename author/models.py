@@ -8,12 +8,12 @@ class Author(models.Model):
     photo = models.CharField(max_length=100)
     url = models.SlugField(unique=True,max_length=100)
 
-    def url_make(self)->self:
+    def url_make(self)->str:
         return reverse(
             "what_author",
             kwargs={
-                "author_id" = self.id,
-                "url" = self.url
+                "author_id": self.id,
+                "url": self.url
             }
         )
 
