@@ -6,6 +6,7 @@ from author.models import Author
 User = get_user_model()
     
 class AuthorSerializer(serializers.ModelSerializer):
+    reviews = serializers.StringRelatedField(read_only=True, many=True)
     
     class Meta:
         model = Author
