@@ -1,13 +1,13 @@
 from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.response import Response, status
-from rest_framework import status
+from rest_framework.response import Response
+from rest_framework import status, generics
 
 from review.models import Review
 from review.serializers import ReviewSerializer
 from author.models import Author
 
-class ReviewView(models.ModelViewSet):
+class ReviewView(generics.ListCreateAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer 
     permission_classes=[IsAuthenticated]
@@ -18,15 +18,15 @@ class ReviewView(models.ModelViewSet):
 
         return super().get_permissions()
 
-    def post(self, request):
+    def post(self, request, slug):
         try:
-            author = Author.objects.get(slug=slug)
+            # author = Author.objects.get(slug=slug)
             review_data = request.data.get('review')
             
             # serializer_context = self.get_serializer_context()
-            # serializer_context['review'] = review
+            # serializer_context['author'] = author
 
-            serializer = self.get_serializer(data=review_data) # , context=serializer_context)
+            serializer = self.get_serializer(data=review_data) #, context=serializer_context)
             serializer.is_valid(raise_execption=True)
             self.perform_create(serializer)
 
