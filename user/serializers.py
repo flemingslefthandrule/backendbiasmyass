@@ -17,3 +17,12 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+class ProfileSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = User 
+        fields = ('username', 'bio', 'image')
+    
+    def get_reviews():
+        pass

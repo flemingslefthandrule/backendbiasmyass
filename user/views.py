@@ -1,12 +1,12 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework import status, views, viewsets
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from user.models import User
-from user.serializers import UserSerializer
+from user.serializers import UserSerializer, ProfileSerializer
 
 @api_view(['POST'])
 def signup(request):
@@ -63,3 +63,29 @@ class UserView(views.APIView):
         serializer = UserSerializer(user)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ProfileView(viewsets.ModelViewSet):
+    
+    queryset = User.objects.all()
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'username'
+    http_method_names = ['get', 'post', 'delete']
+    
+    def get_permissions(self):
+        if self.action == 'list':
+            return [IsAuthenticatedOrReadOnly()]
+        return super().get_permissions()
+    
+    def list(self, request, username=None, *args, **kwargs):
+        try: 
+            profile = User.objects.get(username=username)
+            serializer = self.get_serializer(profile)
+            return Response({"profile": serializer.data})
+
+        except Exception:
+            return Response({"errors": {
+                "body": [
+                    "invalid user"
+                ]
+            }})
