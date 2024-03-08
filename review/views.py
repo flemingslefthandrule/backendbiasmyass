@@ -19,11 +19,11 @@ class ReviewView(viewsets.ModelViewSet):
 
         return super().get_permissions()
 
-    def get(self, slug):
-        if slug:
-            author = get_object_or_404(Author, slug=slug)
-            return Review.objects.filter(author=author)
-        return Review.objects.all()
+    def get_queryset(self):
+        queryset = Review.objects.all()
+        slug = self.kwargs.get('slug', None)
+        author = get_object_or_404(Author, slug=slug)
+        return Review.objects.filter(author=author)
 
     def post(self, request, slug):
         try:
