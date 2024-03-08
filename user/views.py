@@ -22,7 +22,7 @@ def signup(request):
     except Exception:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST',])
+@api_view(['POST'])
 def login(request):
     try:
         user_data = request.data.get('user')
