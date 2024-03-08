@@ -22,13 +22,22 @@ class ReviewView(viewsets.ModelViewSet):
     def post(self, request, slug):
         try:
             author = get_object_or_404(Author, slug=slug)
-            review_data = request.data
-            serializer_context = {'author': author}
-            serializer = self.get_serializer(data=review_data, context=serializer_context)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            review_data = request.data.copy() 
+            review_data['author'] = author.pk
+
+            serializer = self.get_serializer(data=review_data)
+
+            if serializer.is_valid():
+                serializer.save()
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            else:
+                return Response({
+                    "errors": {
+                        "body": serializer.errors
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
         except Exception as e:
             return Response({
                 "errors": {
