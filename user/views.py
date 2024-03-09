@@ -1,91 +1,43 @@
-from rest_framework.decorators import api_view
+from rest_framework import generics, permissions, viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework import status, views, viewsets
-from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate
 
-from user.models import User
-from user.serializers import UserSerializer, ProfileSerializer
+from .serializers import UserSerializer, ProfileSerializer, LoginSerializer
 
-@api_view(['POST'])
-def signup(request):
-    try:
-        user_data = request.data.get('user')
-        
-        serializer = UserSerializer(data=user_data)
+User = get_user_model()
+
+class SignUpView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save() 
+        user = authenticate(request, username=serializer.validated_data['username'], password=serializer.validated_data['password'])
 
-        return Response({"user": serializer.data}, status=status.HTTP_201_CREATED)
-    
-    except Exception:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-@api_view(['POST'])
-def login(request):
-    try:
-        user_data = request.data.get('user')
-        user = authenticate(username=user_data['username'], password=user_data['password']) 
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-        serializer = UserSerializer(user)
-        jwt_token = RefreshToken.for_user(user)
-        serializer_data = serializer.data
-        serializer_data['token'] = str(jwt_token.access_token)
+    def get_object(self):
+        return self.request.user
 
-        response_data = {
-            "user": serializer_data,
-        }
-
-        return Response(response_data, status=status.HTTP_202_ACCEPTED)
-    
-    except Exception:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-
-class UserView(views.APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request, format=None):
-        user = self.request.user
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    def put(self, request, format=None, pk=None):
-        user = self.request.user
-        user_data = request.data.get('user')
-        
-        user.displayname = user_data['displayname'] 
-        user.bio = user_data['bio']
-        user.image = user_data['image']
-        user.save()
-        
-        serializer = UserSerializer(user)
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-class ProfileView(viewsets.ModelViewSet):
-    
+class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     lookup_field = 'username'
-    http_method_names = ['get', 'post', 'delete']
-    
-    def get_permissions(self):
-        if self.action == 'list':
-            return [IsAuthenticatedOrReadOnly()]
-        return super().get_permissions()
-    
-    def list(self, request, username=None, *args, **kwargs):
-        try: 
-            profile = User.objects.get(username=username)
-            serializer = self.get_serializer(profile)
-            return Response({"profile": serializer.data})
-
-        except Exception:
-            return Response({"errors": {
-                "body": [
-                    "invalid user"
-                ]
-            }})

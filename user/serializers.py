@@ -26,3 +26,8 @@ class ProfileSerializer(serializers.ModelSerializer):
     
     def get_reviews():
         pass
+
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True)
