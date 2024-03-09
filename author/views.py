@@ -1,7 +1,8 @@
 from rest_framework import viewsets , status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.response import Response 
+from rest_framework.response import Response
+from django.http import JsonResponse
 
 from user.models import User
 from author.models import Author
@@ -20,3 +21,23 @@ class AuthorView(viewsets.ModelViewSet):
             return [IsAuthenticatedOrReadOnly()]
 
         return super().get_permissions()
+
+
+def findauthor(request):
+    authors = Author.objects.all()
+
+    name = request.GET.get('name')
+
+    if name:
+        authors = authors.filter(name__icontains=name)
+
+    author_data = [
+        {
+            'slug': author.slug,
+            'name': author.name,
+            'photo': author.photo if author.photo else None,
+        }
+        for author in authors
+    ]
+
+    return JsonResponse(author_data, safe=False)
