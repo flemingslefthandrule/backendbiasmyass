@@ -8,5 +8,5 @@ author_router.register('', views.AuthorView)
 
 urlpatterns = [
     path('', include(author_router.urls)),
-    path('whois/', views.findauthor)
+    path('whois/<str:whoisname>', views.findauthor)
 ]

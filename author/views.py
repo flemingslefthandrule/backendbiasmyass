@@ -23,10 +23,10 @@ class AuthorView(viewsets.ModelViewSet):
         return super().get_permissions()
 
 
-def findauthor(request):
+def findauthor(request, whoisname):
     authors = Author.objects.all()
 
-    name = request.GET.get('name')
+    name = whoisname
 
     if name:
         authors = authors.filter(name__icontains=name)
