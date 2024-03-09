@@ -40,4 +40,11 @@ def findauthor(request, whoisname):
         for author in authors
     ]
 
+    if author_data == [] :
+        author_data = [
+            {
+                'name' : 'not found'
+            }
+        ] 
+
     return JsonResponse(author_data, safe=False)
