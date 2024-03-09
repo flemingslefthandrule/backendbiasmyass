@@ -43,7 +43,7 @@ def findauthor(request, whoisname):
     if author_data == [] :
         author_data = [
             {
-                'name' : 'not found'
+                'err' : 'not found'
             }
         ] 
 
